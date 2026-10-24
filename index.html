@@ -1,0 +1,1012 @@
+<!doctype html><html><head><meta charset=utf8>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<style id="app-lock">html{-webkit-text-size-adjust:100%;text-size-adjust:100%}:where(html,body,*){touch-action:manipulation}</style>
+<script id="app-lock-js">(function(){var s={passive:false},p=function(e){e.preventDefault()};
+['gesturestart','gesturechange','gestureend'].forEach(function(t){document.addEventListener(t,p,s)});
+document.addEventListener('touchmove',function(e){if(e.touches&&e.touches.length>1)e.preventDefault()},s);
+document.addEventListener('dblclick',p,s);
+addEventListener('wheel',function(e){if(e.ctrlKey)e.preventDefault()},s);
+addEventListener('keydown',function(e){if((e.ctrlKey||e.metaKey)&&/^[=+\-0]$/.test(e.key))e.preventDefault()});})();</script>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="談判練習室">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="manifest" href="manifest.json">
+</head><body>
+<title>面談練習室</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;700&display=swap">
+<style>
+/* 版面概念：單欄工具。頂部極簡導覽，設定表單 → 對話 → 像面試評分表一樣的回饋頁。 */
+:root{
+  --bg:#F1F4F6; --surface:#FFFFFF; --surface2:#E6ECF0; --line:#C9D3DB;
+  --fg:#15202B; --fg2:#4D5C69;
+  --accent:#1F4E79; --on-accent:#FFFFFF; --accent-soft:#DCE8F3;
+  --signal:#8F5307; --signal-soft:#FBF0DC; --bad:#B3261E;
+  --f-sans:'Noto Sans TC','PingFang TC','Microsoft JhengHei','Heiti TC',system-ui,sans-serif;
+  --f-serif:'Noto Serif TC','Songti TC','PMingLiU','Source Han Serif TC',serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E151C; --surface:#16212B; --surface2:#1E2B37; --line:#2C3B49;
+    --fg:#E4ECF2; --fg2:#9BADBC;
+    --accent:#86B8EA; --on-accent:#0B1823; --accent-soft:#1B3045;
+    --signal:#E3A655; --signal-soft:#2A2113; --bad:#F0897F;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E151C; --surface:#16212B; --surface2:#1E2B37; --line:#2C3B49;
+  --fg:#E4ECF2; --fg2:#9BADBC;
+  --accent:#86B8EA; --on-accent:#0B1823; --accent-soft:#1B3045;
+  --signal:#E3A655; --signal-soft:#2A2113; --bad:#F0897F;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{
+  background:var(--bg); color:var(--fg);
+  font:15px/1.7 var(--f-sans);
+  padding-block:10px 48px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  -webkit-text-size-adjust:100%;
+}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:720px;margin:0 auto}
+h1,h2{font-family:var(--f-serif);text-wrap:balance;margin:0}
+h1{font-size:26px;line-height:1.35;font-weight:700}
+h2{font-size:18px;line-height:1.4;font-weight:700;margin-bottom:10px}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* 頂部 */
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding-block:6px 22px}
+.brand{display:flex;flex-direction:column;line-height:1.2}
+.mark{font-family:var(--f-serif);font-weight:700;font-size:20px;letter-spacing:.04em}
+.sub{font-family:var(--f-mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--fg2)}
+.seg{display:inline-flex;background:var(--surface2);padding:3px;gap:2px;border-radius:11px;max-width:100%}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.seg label span,.tabs button{display:block;padding:7px 16px;border-radius:8px;font-weight:600;color:var(--fg2);white-space:nowrap}
+.seg input:checked + span,.tabs button[aria-selected="true"]{background:var(--surface);color:var(--accent);box-shadow:0 0 0 1px var(--line)}
+.seg input:focus-visible + span{outline:2px solid var(--accent);outline-offset:2px}
+.tabs button{border:0;background:transparent;cursor:pointer}
+
+/* 表單 */
+.lead{color:var(--fg2);max-width:58ch;margin-top:8px}
+form{display:grid;gap:18px;margin-top:22px}
+.fields{display:grid;gap:16px}
+.field{display:grid;gap:6px;min-width:0}
+.row2{display:grid;gap:16px;grid-template-columns:1fr}
+@media (min-width:600px){.row2{grid-template-columns:1fr 1fr}}
+.lbl{font-size:13.5px;font-weight:700}
+.lbl small{font-weight:400;color:var(--fg2)}
+input[type=text],select,textarea{
+  width:100%;min-width:0;padding:10px 12px;font-size:16px;line-height:1.5;
+  background:var(--surface);border:1px solid var(--line);border-radius:8px;
+}
+textarea{resize:vertical}
+.hint-txt{font-size:13px;color:var(--fg2);min-height:1.4em}
+.note{font-size:13px;color:var(--fg2);max-width:60ch}
+.banner{margin-top:16px;padding:10px 14px;border-radius:10px;background:var(--signal-soft);border:1px solid var(--signal);color:var(--fg);font-size:14px}
+.err{color:var(--bad);font-size:14px;font-weight:500}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:10px 18px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;cursor:pointer;line-height:1.3}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btn.sm{padding:6px 12px;font-size:13px}
+.btn.ghost{background:transparent}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.btn.stop{background:var(--surface);color:var(--bad);border-color:var(--bad)}
+.linkbtn{background:none;border:0;padding:0;color:var(--accent);font-weight:700;cursor:pointer;margin-bottom:14px}
+
+/* 對話 */
+.sessionbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.sb-left{min-width:0}
+.sb-title{font-family:var(--f-serif);font-weight:700;font-size:16px;overflow-wrap:anywhere}
+.sb-meta{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--fg2);min-height:1.6em}
+.prog{display:inline-block;width:72px;height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.prog i{display:block;height:100%;background:var(--accent)}
+.sb-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.timer{font-family:var(--f-mono);font-size:14px;font-variant-numeric:tabular-nums;color:var(--fg2)}
+.log{display:flex;flex-direction:column;gap:16px;padding-block:18px;min-height:42vh}
+.msg{display:flex;flex-direction:column;gap:4px;max-width:90%;min-width:0}
+.msg.me{align-self:flex-end;align-items:flex-end}
+.who{font-family:var(--f-mono);font-size:11px;letter-spacing:.08em;color:var(--fg2)}
+.bubble{padding:10px 14px;background:var(--surface);border:1px solid var(--line);border-radius:14px 14px 14px 4px;white-space:pre-wrap;overflow-wrap:anywhere;min-width:0}
+.me .bubble{background:var(--accent);border-color:var(--accent);color:var(--on-accent);border-radius:14px 14px 4px 14px}
+.hintnote{align-self:stretch;max-width:100%;padding:10px 14px;border:1px dashed var(--signal);background:var(--signal-soft);border-radius:10px;white-space:pre-wrap;overflow-wrap:anywhere}
+.hintnote .who{color:var(--signal);display:block;margin-bottom:2px;font-weight:500}
+.endcard{align-self:stretch;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:14px 16px;border:1px solid var(--accent);background:var(--accent-soft);border-radius:12px}
+.retry{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:10px 14px;border:1px solid var(--bad);border-radius:10px;color:var(--fg);font-size:14px;margin-bottom:12px}
+.dots{display:inline-flex;gap:4px;align-items:center;height:1.4em}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--fg2);animation:blink 1.2s infinite ease-in-out}
+.dots i:nth-child(2){animation-delay:.2s}.dots i:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.25}40%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.dots i{animation:none;opacity:.6}}
+.composer{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding-top:10px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));display:grid;gap:8px}
+.composer textarea{field-sizing:content;min-height:3.4em;max-height:38vh}
+.comp-actions{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sr{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.kbd{font-size:12px;color:var(--fg2)}
+@media (hover:none){.kbd{display:none}}
+.comp-right{display:flex;align-items:center;gap:12px}
+
+/* 回饋 */
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.14em;color:var(--fg2);margin-bottom:6px}
+.meta{font-size:13px;color:var(--fg2);margin-top:6px}
+.scorehead{display:flex;align-items:baseline;gap:10px;margin-top:22px}
+.scorehead .n{font-family:var(--f-mono);font-size:56px;line-height:1;font-weight:500;font-variant-numeric:tabular-nums;color:var(--accent)}
+.scorehead .of{font-family:var(--f-mono);font-size:20px;color:var(--fg2)}
+.scorehead .cap{font-size:13px;color:var(--fg2);margin-left:6px}
+.summary{margin-top:12px;max-width:62ch}
+.result{margin-top:10px;max-width:62ch}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:1px 8px;border-radius:6px;background:var(--accent-soft);color:var(--accent);margin-right:6px}
+section.blk{margin-top:28px}
+.sheet{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px 16px 4px}
+.crit{padding:12px 0;border-top:1px solid var(--line)}
+.crit:first-of-type{border-top:0;padding-top:4px}
+.crit-h{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.crit-name{font-weight:700}
+.crit-desc{font-size:12.5px;color:var(--fg2)}
+.boxes{display:inline-flex;align-items:center;gap:4px;flex-shrink:0}
+.boxes i{display:block;width:20px;height:11px;border:1px solid var(--line);border-radius:2px;background:var(--surface2)}
+.boxes i.on{background:var(--accent);border-color:var(--accent)}
+.boxes .num{font-family:var(--f-mono);font-size:12.5px;margin-left:6px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.crit-note{margin-top:6px;font-size:14px;max-width:62ch}
+ul.plain{margin:0;padding-left:1.2em;display:grid;gap:6px;max-width:62ch}
+.rw{display:grid;gap:6px;padding:12px 14px;border:1px solid var(--line);background:var(--surface);border-radius:10px;margin-bottom:10px}
+.rw-row{display:grid;grid-template-columns:4.5em 1fr;gap:10px;align-items:baseline}
+.rw-k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.06em;color:var(--fg2)}
+.rw-v{min-width:0;overflow-wrap:anywhere}
+.rw-v.better{background:var(--accent-soft);padding:6px 10px;border-radius:8px}
+.loading{margin-top:24px;padding:16px;border:1px solid var(--line);background:var(--surface);border-radius:12px;display:flex;gap:12px;align-items:center}
+.tx{margin-top:28px;border-top:1px solid var(--line);padding-top:14px}
+.tx summary{cursor:pointer;font-weight:700}
+.tx .t{margin-top:10px;overflow-wrap:anywhere;white-space:pre-wrap}
+.tx .t b{font-family:var(--f-mono);font-size:12px;font-weight:500;color:var(--fg2);margin-right:8px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:24px}
+.savenote{font-size:12.5px;color:var(--fg2);margin-top:10px}
+
+/* 紀錄 */
+.trends{display:grid;gap:12px;grid-template-columns:1fr;margin-top:20px}
+@media (min-width:600px){.trends{grid-template-columns:1fr 1fr}}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:4px}
+.tile .k{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.1em;color:var(--fg2)}
+.tile .v{display:flex;align-items:baseline;gap:6px}
+.tile .v b{font-family:var(--f-mono);font-size:30px;font-weight:500;font-variant-numeric:tabular-nums}
+.tile .v span{font-family:var(--f-mono);color:var(--fg2);font-size:13px}
+.tile .d{font-size:12.5px;color:var(--fg2)}
+.sp-line{fill:none;stroke:var(--accent);stroke-width:1.75;stroke-linejoin:round;stroke-linecap:round}
+.sp-dot{fill:var(--fg2)}.sp-end{fill:var(--accent)}
+.recs{list-style:none;margin:20px 0 0;padding:0;display:grid;gap:8px}
+.rec{display:flex;gap:8px;align-items:stretch}
+.rec-main{flex:1;min-width:0;display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer}
+.rec-date{font-family:var(--f-mono);font-size:12px;color:var(--fg2);font-variant-numeric:tabular-nums}
+.rec-body{display:grid;min-width:0}
+.rec-title{font-weight:700;overflow-wrap:anywhere}
+.rec-sub{font-size:12.5px;color:var(--fg2)}
+.rec-score{font-family:var(--f-mono);font-variant-numeric:tabular-nums;font-weight:500;color:var(--accent);white-space:nowrap}
+.rec-score.none{color:var(--fg2);font-family:var(--f-sans);font-weight:400;font-size:13px}
+.rec-del{background:none;border:1px solid transparent;border-radius:8px;color:var(--fg2);font-size:13px;padding:0 10px;cursor:pointer;white-space:nowrap}
+.rec-del.armed{color:var(--bad);border-color:var(--bad)}
+.empty{margin-top:22px;padding:22px 18px;border:1px dashed var(--line);border-radius:12px;color:var(--fg2)}
+@media (max-width:420px){
+  .rec-main{grid-template-columns:1fr auto}
+  .rec-date{grid-column:1 / -1}
+}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mark">面談練習室</span><span class="sub">Rehearsal Room</span></div>
+    <div class="seg tabs" role="tablist" aria-label="頁面">
+      <button type="button" role="tab" id="tab-practice" aria-selected="true">練習</button>
+      <button type="button" role="tab" id="tab-history" aria-selected="false">紀錄</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 設定 -->
+    <section id="v-setup">
+      <h1>今天練什麼？</h1>
+      <p class="lead">選面試或談判，填好情境就能開始。對練時 AI 全程入戲，結束後才換成教練，逐項給你回饋。</p>
+      <div id="banner" class="banner" hidden>目前的環境無法呼叫 Claude，所以不能對練。請在 Claude 裡開啟這個頁面，不要用下載後的檔案或外部連結。</div>
+
+      <form id="form-setup" autocomplete="off" novalidate>
+        <div class="field">
+          <span class="lbl" id="lbl-mode">練習類型</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-mode">
+            <label><input type="radio" name="mode" value="interview" checked><span>面試</span></label>
+            <label><input type="radio" name="mode" value="negotiation"><span>談判</span></label>
+          </div>
+        </div>
+
+        <div id="f-interview" class="fields">
+          <div class="row2">
+            <div class="field"><label class="lbl" for="iv-role">應徵職位</label><input id="iv-role" type="text" value="行銷企劃專員"></div>
+            <div class="field"><label class="lbl" for="iv-industry">公司或產業</label><input id="iv-industry" type="text" value="電商平台，約 200 人"></div>
+          </div>
+          <div class="field"><label class="lbl" for="iv-level">你的背景</label><input id="iv-level" type="text" value="3 年社群與活動行銷經驗，目前在小型廣告公司"></div>
+          <div class="row2">
+            <div class="field"><label class="lbl" for="iv-style">面試官風格</label><select id="iv-style"></select><p class="hint-txt" id="iv-style-desc"></p></div>
+            <div class="field">
+              <span class="lbl" id="lbl-count">主要題數</span>
+              <div class="seg" role="radiogroup" aria-labelledby="lbl-count">
+                <label><input type="radio" name="count" value="5" checked><span>5 題</span></label>
+                <label><input type="radio" name="count" value="8"><span>8 題</span></label>
+                <label><input type="radio" name="count" value="12"><span>12 題</span></label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="f-negotiation" class="fields" hidden>
+          <div class="row2">
+            <div class="field"><label class="lbl" for="ng-preset">情境</label><select id="ng-preset"></select></div>
+            <div class="field"><label class="lbl" for="ng-opp">對方是誰</label><input id="ng-opp" type="text"></div>
+          </div>
+          <div class="field"><label class="lbl" for="ng-scenario">情境說明</label><textarea id="ng-scenario" rows="3" placeholder="簡單描述現在的狀況、對方開了什麼條件"></textarea></div>
+          <div class="row2">
+            <div class="field"><label class="lbl" for="ng-goal">你的目標</label><input id="ng-goal" type="text"></div>
+            <div class="field"><label class="lbl" for="ng-floor">你的底線 <small>（只有結束後的教練看得到，對方不知道）</small></label><input id="ng-floor" type="text"></div>
+          </div>
+          <div class="field"><label class="lbl" for="ng-style">對方風格</label><select id="ng-style"></select><p class="hint-txt" id="ng-style-desc"></p></div>
+        </div>
+
+        <div class="field">
+          <span class="lbl" id="lbl-diff">難度</span>
+          <div class="seg" role="radiogroup" aria-labelledby="lbl-diff">
+            <label><input type="radio" name="diff" value="easy"><span>簡單</span></label>
+            <label><input type="radio" name="diff" value="normal" checked><span>標準</span></label>
+            <label><input type="radio" name="diff" value="hard"><span>困難</span></label>
+          </div>
+          <p class="hint-txt" id="diff-desc"></p>
+        </div>
+
+        <p class="note">欄位裡是範例，改成你自己的情況即可。對練內容會送給 Claude 處理，真實的公司名稱或薪資數字可以用代稱代替。</p>
+        <p class="err" id="setup-err" hidden></p>
+        <div><button type="submit" class="btn primary" id="btn-start">開始練習</button></div>
+      </form>
+    </section>
+
+    <!-- 對話 -->
+    <section id="v-session" hidden>
+      <div class="sessionbar">
+        <div class="sb-left"><div class="sb-title" id="sb-title"></div><div class="sb-meta" id="sb-meta"></div></div>
+        <div class="sb-right"><span class="timer" id="timer">00:00</span><button type="button" class="btn sm" id="btn-finish">結束並看回饋</button></div>
+      </div>
+      <div class="log" id="log" aria-live="polite"></div>
+      <div class="retry" id="retry" hidden></div>
+      <div class="composer" id="composer">
+        <label class="sr" for="inp">你的回答</label>
+        <textarea id="inp" rows="2" placeholder="輸入你的回答…"></textarea>
+        <div class="comp-actions">
+          <button type="button" class="btn ghost sm" id="btn-hint">場外提示</button>
+          <div class="comp-right"><span class="kbd">Ctrl + Enter 送出</span><button type="button" class="btn primary" id="btn-send">送出</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 回饋 -->
+    <section id="v-review" hidden></section>
+
+    <!-- 紀錄 -->
+    <section id="v-history" hidden></section>
+  </main>
+</div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => Array.from(r.querySelectorAll(s));
+function h(tag, props, ...kids) {
+  const el = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') el.className = v;
+    else if (k === 'text') el.textContent = v;
+    else if (k.startsWith('on') && typeof v === 'function') el.addEventListener(k.slice(2), v);
+    else el.setAttribute(k, v === true ? '' : String(v));
+  }
+  for (const kid of kids.flat(2)) {
+    if (kid == null || kid === false) continue;
+    el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  }
+  return el;
+}
+
+/* ---------- 設定資料 ---------- */
+const IV_STYLES = {
+  friendly: { label: '親切型', desc: '語氣溫和，會給你暖身空間，但追問依然具體。' },
+  strict: { label: '嚴謹型', desc: '重視細節與數據，會要你補上具體數字與結果。' },
+  pressure: { label: '壓力型', desc: '節奏快，會質疑你的說法，偶爾打斷。' },
+  technical: { label: '技術型', desc: '深入專業做法，要你說明判斷依據。' }
+};
+const NG_STYLES = {
+  hard: { label: '強硬', desc: '開價極端，很少讓步，會施壓。' },
+  stall: { label: '拖延', desc: '一直說要再研究、要問主管，不給承諾。' },
+  emotional: { label: '情緒化', desc: '會抱怨、訴苦或生氣，立場容易搖擺。' },
+  nice: { label: '友善但不讓步', desc: '態度很好、會稱讚你，但核心條件幾乎不動。' }
+};
+const DIFFS = {
+  easy: { label: '簡單', desc: '對方比較好說話，會給你空間說明。' },
+  normal: { label: '標準', desc: '接近真實情況。' },
+  hard: { label: '困難', desc: '對方挑剔，不輕易認同，會抓你前後矛盾的地方。' }
+};
+const NG_PRESETS = {
+  salary: { label: '薪資談判', opp: '公司人資主管', scenario: '你通過了一家中型軟體公司的面試，人資主管來電談薪資。公司開出月薪 NT$62,000，你期待 NT$75,000 以上。', goal: '月薪 NT$75,000，另有年度績效獎金', floor: '月薪低於 NT$68,000 就不接受' },
+  client: { label: '客戶殺價', opp: '客戶的採購窗口', scenario: '你經營設計工作室，客戶要做品牌官網。你報價 NT$180,000，對方說預算只有 NT$120,000，要求再降。', goal: 'NT$165,000 成交，先付五成訂金', floor: '不低於 NT$145,000' },
+  lease: { label: '租約續租', opp: '房東', scenario: '你租的套房租約下個月到期，房東通知續約要從每月 NT$16,000 漲到 NT$18,500。你住得滿意，但預算有限。', goal: '維持 NT$16,000，最多漲到 NT$16,800，換兩年約', floor: '超過 NT$17,500 就搬走' },
+  partner: { label: '合作條件', opp: '品牌方的業務窗口', scenario: '你經營一個有 8 萬追蹤者的 Podcast。品牌方想找你做業配，開價每集 NT$15,000，並要求三個月獨家。', goal: '每集 NT$25,000，不綁獨家', floor: '每集不低於 NT$20,000，獨家最多一個月' },
+  custom: { label: '自訂情境', opp: '', scenario: '', goal: '', floor: '' }
+};
+const IV_DIMS = [
+  { key: 'structure', label: '回答結構', desc: '有沒有交代情境、行動與結果（STAR）' },
+  { key: 'specificity', label: '具體程度', desc: '實例、數字，以及你自己的角色' },
+  { key: 'relevance', label: '切題與針對性', desc: '有沒有回應題目，並貼近這個職位' },
+  { key: 'delivery', label: '表達與語氣', desc: '清楚、簡潔、有自信，不空泛也不囉嗦' },
+  { key: 'adaptability', label: '應變與反問', desc: '面對追問的反應，以及提問的品質' }
+];
+const NG_DIMS = [
+  { key: 'anchoring', label: '開價與錨定', desc: '是否先立下有利的起點，並說出理由' },
+  { key: 'discovery', label: '需求探索', desc: '是否用問題弄清楚對方的限制與在意的事' },
+  { key: 'concessions', label: '讓步節奏', desc: '讓步是否有交換條件，不白送' },
+  { key: 'boundary', label: '守住底線', desc: '是否守住目標與底線，不被情緒推著走' },
+  { key: 'closing', label: '收尾與成交', desc: '是否確認條件、推進結論' }
+];
+
+/* ---------- 狀態 ---------- */
+const S = {
+  view: 'setup', pv: 'setup', readOnly: false,
+  cfg: null, rules: '', turns: [], hintCount: 0, hintBusy: false,
+  qNow: 0, qTotal: 0, ended: false, busy: false, run: 0, ctl: null,
+  startedAt: 0, durationSec: 0,
+  rec: null, shown: null,
+  sample: null, col: null, sessions: null, storeState: 'pending', storeErr: null
+};
+const FB = new WeakMap();      // rec -> {loading, error}
+const SAVED = new WeakMap();   // rec -> true | false
+const SAVEQ = new WeakMap();   // rec -> promise chain
+let timerId = null;
+
+const api = window.claude;
+const use = (n) => (api && typeof api.use === 'function') ? Promise.resolve(api.use(n)).catch(() => null) : Promise.resolve(null);
+const samplePromise = use('sample');
+
+/* ---------- 小工具 ---------- */
+const val = (id) => ($('#' + id).value || '').trim();
+const setVal = (id, v) => { if (v != null) $('#' + id).value = v; };
+const setRadio = (name, v) => { const el = $(`input[name="${name}"][value="${v}"]`); if (el) el.checked = true; };
+const fmtClock = (s) => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+const mins = (s) => Math.max(1, Math.round((s || 0) / 60)) + ' 分鐘';
+function fmtDate(ts) {
+  try { return new Date(ts).toLocaleString('zh-TW', { month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false }); }
+  catch (e) { return ''; }
+}
+const modeLabel = (m) => m === 'interview' ? '面試' : '談判';
+const titleOf = (c) => c.mode === 'interview'
+  ? `${c.role}・面試`
+  : `${(NG_PRESETS[c.preset] || NG_PRESETS.custom).label}・${c.opp || '對方'}`;
+const whoOf = (c) => c.mode === 'interview' ? '面試官' : (c.opp || '對方');
+
+function errCopy(code) {
+  switch (code) {
+    case 'not_granted': return '你沒有允許這個頁面使用 Claude，所以無法繼續。重新整理頁面，在跳出的視窗按允許。';
+    case 'sampling_disabled': case 'capability_disabled': case 'not_declared': case 'capability_removed':
+      return '這個帳號或目前的檢視環境無法使用 Claude 對話。';
+    case 'rate_limited': return '呼叫太頻繁，或已達用量上限。請稍後再試。';
+    case 'session_expired': return '登入已過期，請重新登入後再試。';
+    case 'refused': return 'Claude 無法回應這段內容。請換個說法再試。';
+    case 'empty_completion': return 'Claude 這次沒有產生內容，請重試。';
+    case 'prompt_too_large': return '對話太長了。請結束練習並產生回饋。';
+    case 'invalid_json': return '回饋的格式出了問題，請重試。';
+    default: return '連線出了問題，請重試。';
+  }
+}
+const PERMANENT = new Set(['not_granted', 'sampling_disabled', 'capability_disabled', 'not_declared', 'capability_removed', 'session_expired', 'prompt_too_large']);
+
+/* ---------- 視圖切換 ---------- */
+function showView(v, keepScroll) {
+  S.view = v;
+  ['setup', 'session', 'review', 'history'].forEach((n) => { $('#v-' + n).hidden = n !== v; });
+  const hist = v === 'history' || (v === 'review' && S.readOnly);
+  $('#tab-practice').setAttribute('aria-selected', String(!hist));
+  $('#tab-history').setAttribute('aria-selected', String(hist));
+  if (!keepScroll) window.scrollTo(0, 0);
+}
+function setPractice(v, keepScroll) { S.pv = v; showView(v, keepScroll); }
+
+$('#tab-practice').addEventListener('click', () => {
+  if (S.pv === 'review' && S.rec) { S.shown = S.rec; S.readOnly = false; renderReview(); }
+  showView(S.pv, S.pv === 'session');
+});
+$('#tab-history').addEventListener('click', () => { renderHistory(); showView('history'); });
+
+/* ---------- 設定表單 ---------- */
+function fillSelect(id, obj) {
+  const sel = $('#' + id);
+  sel.replaceChildren(...Object.entries(obj).map(([k, v]) => h('option', { value: k, text: v.label })));
+}
+fillSelect('iv-style', IV_STYLES);
+fillSelect('ng-style', NG_STYLES);
+fillSelect('ng-preset', NG_PRESETS);
+setVal('ng-style', 'hard');
+
+function syncMode() {
+  const iv = $('input[name="mode"]:checked').value === 'interview';
+  $('#f-interview').hidden = !iv;
+  $('#f-negotiation').hidden = iv;
+}
+function syncDescs() {
+  $('#iv-style-desc').textContent = (IV_STYLES[val('iv-style')] || {}).desc || '';
+  $('#ng-style-desc').textContent = (NG_STYLES[val('ng-style')] || {}).desc || '';
+  $('#diff-desc').textContent = (DIFFS[$('input[name="diff"]:checked').value] || {}).desc || '';
+}
+function applyPreset(id) {
+  const p = NG_PRESETS[id]; if (!p) return;
+  setVal('ng-opp', p.opp); setVal('ng-scenario', p.scenario); setVal('ng-goal', p.goal); setVal('ng-floor', p.floor);
+}
+$$('input[name="mode"]').forEach((el) => el.addEventListener('change', syncMode));
+$$('input[name="diff"]').forEach((el) => el.addEventListener('change', syncDescs));
+$('#iv-style').addEventListener('change', syncDescs);
+$('#ng-style').addEventListener('change', syncDescs);
+$('#ng-preset').addEventListener('change', () => applyPreset(val('ng-preset')));
+applyPreset('salary');
+syncMode(); syncDescs();
+
+function readConfig() {
+  const mode = $('input[name="mode"]:checked').value;
+  const difficulty = $('input[name="diff"]:checked').value;
+  if (mode === 'interview') {
+    return { mode, difficulty, role: val('iv-role'), industry: val('iv-industry') || '未說明', level: val('iv-level') || '未說明', style: val('iv-style'), count: Number($('input[name="count"]:checked').value) };
+  }
+  return { mode, difficulty, preset: val('ng-preset'), opp: val('ng-opp') || '對方', scenario: val('ng-scenario'), goal: val('ng-goal') || '未說明', floor: val('ng-floor') || '未說明', style: val('ng-style') };
+}
+function fillForm(c) {
+  if (!c || !c.mode) return;
+  setRadio('mode', c.mode); setRadio('diff', c.difficulty || 'normal');
+  if (c.mode === 'interview') {
+    setVal('iv-role', c.role); setVal('iv-industry', c.industry); setVal('iv-level', c.level);
+    if (IV_STYLES[c.style]) setVal('iv-style', c.style);
+    setRadio('count', String(c.count || 5));
+  } else {
+    if (NG_PRESETS[c.preset]) setVal('ng-preset', c.preset);
+    setVal('ng-opp', c.opp); setVal('ng-scenario', c.scenario); setVal('ng-goal', c.goal); setVal('ng-floor', c.floor);
+    if (NG_STYLES[c.style]) setVal('ng-style', c.style);
+  }
+  syncMode(); syncDescs();
+}
+const LS_KEY = 'rehearsal.cfg.v1';
+function loadLast() { try { return JSON.parse(localStorage.getItem(LS_KEY) || 'null'); } catch (e) { return null; } }
+function saveLast(c) { try { localStorage.setItem(LS_KEY, JSON.stringify(c)); } catch (e) { /* 忽略 */ } }
+{ const last = loadLast(); if (last) fillForm(last); }
+
+$('#form-setup').addEventListener('submit', (e) => {
+  e.preventDefault();
+  const c = readConfig();
+  const err = $('#setup-err');
+  if (c.mode === 'interview' && !c.role) { err.textContent = '請填寫應徵職位。'; err.hidden = false; return; }
+  if (c.mode === 'negotiation' && !c.scenario) { err.textContent = '請描述談判情境，對方才知道要扮演什麼。'; err.hidden = false; return; }
+  err.hidden = true;
+  startSession(c);
+});
+
+samplePromise.then((s) => {
+  if (!s) { $('#banner').hidden = false; $('#btn-start').disabled = true; }
+});
+
+/* ---------- 提示詞 ---------- */
+function buildRules(c) {
+  const diff = DIFFS[c.difficulty];
+  if (c.mode === 'interview') {
+    const st = IV_STYLES[c.style] || IV_STYLES.friendly;
+    return [
+      '你現在要扮演一位真實的面試官，和使用者做求職面試的模擬練習。請使用繁體中文（台灣用語），語氣口語自然。',
+      '',
+      '【面試設定】',
+      '- 應徵職位：' + c.role,
+      '- 公司或產業：' + c.industry,
+      '- 應徵者背景：' + c.level,
+      '- 你的風格：' + st.label + '（' + st.desc + '）',
+      '- 難度：' + diff.label + '（' + diff.desc + '）',
+      '- 預計的主要問題數：' + c.count + ' 題',
+      '',
+      '【你要遵守】',
+      '1. 全程入戲，只說面試官會說的話。不要替使用者評分、不要給建議、不要跳出角色說明，也不要提到你是 AI 或這是練習。',
+      '2. 每次只問一個問題。每次回覆 1 到 4 句，像真人口語，不要條列、不要 markdown 符號、不要用括號描寫動作。',
+      '3. 依使用者的回答追問：回答空泛，就追問具體例子、數字或他自己的角色；回答完整，就進入下一題。同一題最多追問兩次。',
+      '4. 題目要涵蓋：自我介紹與動機、過往的具體經驗（行為面試題）、與職位相關的專業情境題、面對壓力或衝突的做法，最後一題是讓使用者向你提問。依職位與你的風格調整，不要照本宣科。',
+      '5. 每則回覆的最後一行，單獨加上標記 [[Q:n]]，n 是這則回覆所屬的主要問題編號，從 1 開始；追問同一題時 n 不變。',
+      '6. 使用者回答完第 ' + c.count + ' 題（含必要的追問）後，用一兩句話禮貌收尾，結束面試，並在最後一行單獨加上 [[END]]。這則回覆不要再加 [[Q:n]]。',
+      '7. 如果使用者說了與面試無關的內容或亂打字，以面試官的身分自然地把話題帶回來。',
+      '',
+      '請從打招呼開始，簡短開場後問第 1 題。'
+    ].join('\n');
+  }
+  const st = NG_STYLES[c.style] || NG_STYLES.hard;
+  return [
+    '你現在要扮演談判的「對方」，和使用者做談判模擬練習。請使用繁體中文（台灣用語），語氣口語自然。',
+    '',
+    '【情境】' + c.scenario,
+    '【你的身分】' + (c.opp || '對方'),
+    '【你的風格】' + st.label + '（' + st.desc + '）',
+    '【難度】' + diff.label + '（' + diff.desc + '）',
+    '',
+    '【你要遵守】',
+    '1. 開始前，先在心裡為你這一方設定合理的立場、預算或底線，以及可以讓步與不能讓步的項目。這些不要寫出來，也不要直接講出你的底線。',
+    '2. 你不知道使用者的目標與底線，只能從他說的話與態度判斷。',
+    '3. 全程入戲。不要給使用者建議、不要評分、不要跳出角色，也不要提到你是 AI 或這是練習。',
+    '4. 每次回覆 1 到 4 句，像真人口語，不要條列、不要 markdown 符號、不要用括號描寫動作。每次只推進一個重點。',
+    '5. 讓步要像真人：使用者提出有道理的理由、用問題挖出你的需求、或提出交換條件時，你才會鬆動；使用者只是一直要求或情緒化施壓時，你不輕易讓步。每次讓步都要對方也給點什麼。',
+    '6. 依難度調整：簡單的話，你比較願意聽使用者說明、讓步較多；困難的話，你會挑剔、質疑，並抓使用者前後矛盾的地方。',
+    '7. 談判到達明確結果（雙方同意條件，或任一方明確表示破局離開）時，用一兩句話收尾，並在最後一行單獨加上 [[END]]。在那之前不要輕易結束，也不要替使用者做決定。',
+    '8. 如果使用者說了與談判無關的內容，以你的角色自然地把話題帶回來。',
+    '',
+    '請由你先開場：用一兩句話帶出情境與你這一方的立場，不要一次攤牌所有條件。'
+  ].join('\n');
+}
+
+function transcriptOf(c, turns) {
+  const who = whoOf(c);
+  return turns.map((t) => (t.role === 'user' ? '使用者' : who) + '：' + t.text).join('\n');
+}
+function setupLines(c) {
+  if (c.mode === 'interview') {
+    return ['應徵職位：' + c.role, '公司或產業：' + c.industry, '使用者背景：' + c.level, '面試官風格：' + (IV_STYLES[c.style] || {}).label, '難度：' + DIFFS[c.difficulty].label, '預計題數：' + c.count];
+  }
+  return ['情境：' + c.scenario, '對方身分：' + c.opp, '對方風格：' + (NG_STYLES[c.style] || {}).label, '難度：' + DIFFS[c.difficulty].label, '使用者的目標：' + c.goal, '使用者的底線（對方不知道）：' + c.floor];
+}
+function hintPrompt() {
+  const c = S.cfg, who = whoOf(c);
+  return [
+    '你是一位' + (c.mode === 'interview' ? '求職面試' : '談判') + '教練。使用者正在做模擬練習，現在卡住了，需要一則場外提示。請使用繁體中文（台灣用語）。',
+    '',
+    '【練習設定】',
+    ...setupLines(c),
+    '',
+    '【目前的對話】',
+    transcriptOf(c, S.turns),
+    '',
+    '請用 3 句以內告訴使用者：' + who + '現在在意的重點是什麼、下一句可以往哪個方向說，最後給一句可以直接說出口的示範。不要替使用者寫完整個回答，不要使用 markdown 符號或條列。'
+  ].join('\n');
+}
+function feedbackPrompt(rec) {
+  const c = rec.cfg, isIv = rec.mode === 'interview', dims = isIv ? IV_DIMS : NG_DIMS, who = whoOf(c);
+  const lines = [
+    '你是一位資深的' + (isIv ? '求職面試' : '談判') + '教練，剛看完使用者的一場模擬練習。請使用繁體中文（台灣用語），評估使用者（不是' + who + '）的表現。',
+    '',
+    '【練習設定】',
+    ...setupLines(c),
+    '',
+    rec.completed ? '這場練習自然結束。' : '使用者提前結束了練習，對話可能沒走完整個流程。請只就已發生的內容評分，並在 summary 說明這一點。',
+    '場外提示使用次數：' + (rec.hints || 0),
+    '',
+    '【完整對話】',
+    transcriptOf(c, rec.turns),
+    '',
+    '【評分標準】',
+    '每一項給 1 到 5 的整數：1＝幾乎沒有做到；2＝有嘗試但明顯不足；3＝及格，但籠統或有明顯漏洞；4＝做得好，只剩小地方可改；5＝具體、有說服力，近乎範例。不要為了鼓勵而給高分。對話太短、無法判斷的項目給 2，並在 note 說明資料不足。',
+    '評分項目（key：名稱，說明）：',
+    ...dims.map((d) => '- ' + d.key + '：' + d.label + '，' + d.desc),
+    '',
+    '【輸出格式】',
+    '只輸出一個 JSON 物件，不要任何其他文字，也不要 markdown 程式碼框。字串裡不要出現半形雙引號，要引用時用「」；字串不要換行。結構如下：',
+    isIv
+      ? '{"summary":"...","scores":[{"key":"structure","score":3,"note":"..."}],"strengths":["..."],"rewrites":[{"original":"...","problem":"...","better":"..."}],"missed":["..."],"nextDrill":"..."}'
+      : '{"summary":"...","result":"...","scores":[{"key":"anchoring","score":3,"note":"..."}],"strengths":["..."],"rewrites":[{"original":"...","problem":"...","better":"..."}],"missed":["..."],"nextDrill":"..."}',
+    '',
+    '欄位說明：',
+    '- summary：整體評語，2 到 3 句，先講最重要的一件事。',
+    ...(isIv ? [] : ['- result：談判結果（成交、破局或未結束），並說明和使用者的目標、底線的距離，一句話。']),
+    '- scores：依上面的順序共 ' + dims.length + ' 項；note 一到兩句，要引用對話中的具體內容。',
+    '- strengths：做得好的地方，最多 3 點，每點一句。',
+    '- rewrites：最多 3 筆。original 必須出自使用者實際說過的話（可略縮）；problem 一句話；better 是使用者下次可以直接說出口的句子。',
+    '- missed：' + (isIv ? '沒有追問補強或本可加分的時機' : '讓步時機、錨定、沒問的問題等錯過的機會') + '，最多 3 點，每點指出在對話的哪個時刻。',
+    '- nextDrill：下一次練習建議，一句話。'
+  ];
+  return lines.join('\n');
+}
+
+/* ---------- 回覆解析 ---------- */
+function parseReply(raw) {
+  const ended = /\[\[END\]\]/.test(raw);
+  const qm = raw.match(/\[\[Q:\s*(\d+)\s*\]\]/);
+  let text = raw.replace(/\[\[[^\]]*\]\]/g, '').replace(/\[\[?[^\]]*$/, '').trim();
+  return { text, ended, q: qm ? Number(qm[1]) : null };
+}
+
+/* ---------- 對話流程 ---------- */
+function buildInput() {
+  const arr = [{ role: 'user', content: S.rules }];
+  for (const t of S.turns) arr.push({ role: t.role, content: t.raw || t.text });
+  return arr;
+}
+function nearBottom() { const d = document.documentElement; return d.scrollHeight - (window.scrollY + window.innerHeight) < 180; }
+function toBottom() { window.scrollTo(0, document.documentElement.scrollHeight); }
+function dots() { return h('span', { class: 'dots', 'aria-label': '回覆中' }, h('i'), h('i'), h('i')); }
+
+function addBubble(role, text) {
+  const who = role === 'user' ? '你' : whoOf(S.cfg);
+  const b = h('div', { class: 'bubble' });
+  if (text) b.textContent = text; else b.append(dots());
+  $('#log').append(h('div', { class: 'msg ' + (role === 'user' ? 'me' : 'them') }, h('span', { class: 'who', text: who }), b));
+  toBottom();
+  return b;
+}
+function showRetry(msg, canRetry) {
+  const r = $('#retry');
+  r.replaceChildren(h('span', { text: msg }), canRetry ? h('button', { class: 'btn sm', type: 'button', onclick: () => { hideRetry(); aiTurn(); } }, '重試') : null);
+  r.hidden = false;
+  toBottom();
+}
+function hideRetry() { $('#retry').hidden = true; }
+
+function renderSessionHead() {
+  const c = S.cfg; if (!c) return;
+  $('#sb-title').textContent = titleOf(c);
+  const meta = $('#sb-meta'); meta.replaceChildren();
+  if (c.mode === 'interview') {
+    const q = S.ended ? S.qTotal : S.qNow;
+    meta.append(h('span', { text: S.ended ? '已完成' : (q ? `第 ${q} / ${S.qTotal} 題` : `共 ${S.qTotal} 題`) }));
+    const bar = h('span', { class: 'prog' }); const fill = h('i'); fill.style.width = Math.round(100 * q / S.qTotal) + '%'; bar.append(fill);
+    meta.append(bar);
+  } else {
+    meta.append(h('span', { text: `${NG_STYLES[c.style].label} · ${DIFFS[c.difficulty].label}` }));
+  }
+}
+function updateComposer() {
+  $('#composer').hidden = !!S.ended;
+  const send = $('#btn-send');
+  send.textContent = S.busy ? '停止' : '送出';
+  send.classList.toggle('stop', S.busy);
+  send.classList.toggle('primary', !S.busy);
+  $('#btn-hint').disabled = S.busy || S.hintBusy || !S.turns.some((t) => t.role === 'assistant');
+  $('#btn-finish').textContent = S.turns.some((t) => t.role === 'user') ? '結束並看回饋' : '返回設定';
+}
+function startTimer() { stopTimer(); tick(); timerId = setInterval(tick, 1000); }
+function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+function tick() { $('#timer').textContent = fmtClock(Math.floor((Date.now() - S.startedAt) / 1000)); }
+
+async function startSession(cfg) {
+  S.sample = await samplePromise;
+  if (!S.sample) { $('#banner').hidden = false; return; }
+  S.run++;
+  Object.assign(S, {
+    cfg, turns: [], hintCount: 0, hintBusy: false, qNow: 0, qTotal: cfg.mode === 'interview' ? cfg.count : 0,
+    ended: false, busy: false, startedAt: Date.now(), rules: buildRules(cfg), readOnly: false
+  });
+  saveLast(cfg);
+  $('#log').replaceChildren(); $('#inp').value = ''; hideRetry();
+  renderSessionHead(); updateComposer(); startTimer();
+  setPractice('session');
+  await aiTurn();
+}
+
+async function aiTurn() {
+  const run = ++S.run;
+  S.busy = true; updateComposer(); hideRetry();
+  const bubble = addBubble('assistant', '');
+  const ctl = new AbortController(); S.ctl = ctl;
+  try {
+    const ask = S.sample;
+    const res = await ask(buildInput(), {
+      signal: ctl.signal, modelTier: 'quick', cache: false,
+      onText: ({ text }) => {
+        if (run !== S.run) return;
+        const keep = nearBottom();
+        bubble.textContent = parseReply(text).text || '…';
+        if (keep) toBottom();
+      }
+    });
+    if (run !== S.run) return;
+    const p = parseReply(res.text);
+    const clean = p.text || '（沒有收到內容）';
+    bubble.textContent = clean;
+    S.turns.push({ role: 'assistant', text: clean, raw: res.text });
+    if (S.cfg.mode === 'interview') S.qNow = p.q ? Math.min(p.q, S.qTotal) : Math.max(S.qNow, 1);
+    if (p.ended) { S.ended = true; stopTimer(); addEndCard(); }
+  } catch (e) {
+    if (run !== S.run) return;
+    const m = bubble.closest('.msg'); if (m) m.remove();
+    if (e && e.code === 'cancelled') showRetry('已停止這次回覆。', true);
+    else showRetry(errCopy(e && e.code), !PERMANENT.has(e && e.code));
+  } finally {
+    if (run === S.run) { S.busy = false; updateComposer(); renderSessionHead(); }
+  }
+}
+function addEndCard() {
+  $('#log').append(h('div', { class: 'endcard' }, h('span', { text: '這場練習結束了。' }), h('button', { class: 'btn primary', type: 'button', onclick: endSession }, '產生回饋')));
+  toBottom();
+}
+
+function onSend() {
+  if (S.busy) { if (S.ctl) S.ctl.abort(); return; }
+  const text = $('#inp').value.trim(); if (!text) return;
+  $('#inp').value = '';
+  S.turns.push({ role: 'user', text });
+  addBubble('user', text);
+  aiTurn();
+}
+$('#btn-send').addEventListener('click', onSend);
+$('#inp').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); onSend(); } });
+
+async function onHint() {
+  if (S.busy || S.hintBusy) return;
+  S.hintBusy = true; updateComposer();
+  const body = h('span', {}, dots());
+  const note = h('div', { class: 'hintnote' }, h('span', { class: 'who', text: '場外提示 · 對方聽不到' }), body);
+  $('#log').append(note); toBottom();
+  const run = S.run;
+  try {
+    const ask = S.sample;
+    const res = await ask(hintPrompt(), { modelTier: 'quick', cache: false });
+    if (run !== S.run) return;
+    body.textContent = res.text.trim();
+    S.hintCount++;
+  } catch (e) {
+    if (run !== S.run) return;
+    body.textContent = errCopy(e && e.code);
+  } finally {
+    if (run === S.run) { S.hintBusy = false; updateComposer(); toBottom(); }
+  }
+}
+$('#btn-hint').addEventListener('click', onHint);
+
+function resetToSetup() {
+  S.run++; stopTimer(); S.busy = false; S.hintBusy = false;
+  if (S.ctl) S.ctl.abort();
+  setPractice('setup');
+}
+$('#btn-finish').addEventListener('click', () => {
+  if (!S.turns.some((t) => t.role === 'user')) { resetToSetup(); return; }
+  endSession();
+});
+
+/* ---------- 結束、回饋、儲存 ---------- */
+function endSession() {
+  if (S.pv !== 'session') return;
+  S.run++; if (S.ctl) S.ctl.abort();
+  S.busy = false; S.hintBusy = false; stopTimer();
+  S.durationSec = Math.floor((Date.now() - S.startedAt) / 1000);
+  const rec = {
+    id: 's' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    createdAt: Date.now(), mode: S.cfg.mode, title: titleOf(S.cfg), cfg: S.cfg,
+    turns: S.turns.map(({ role, text }) => ({ role, text })),
+    hints: S.hintCount, durationSec: S.durationSec, completed: !!S.ended,
+    feedback: null, total: null, max: 25
+  };
+  S.rec = rec; S.shown = rec; S.readOnly = false;
+  setPractice('review'); renderReview();
+  persist(rec);
+  requestFeedback(rec);
+}
+
+function persist(rec) {
+  const chain = (SAVEQ.get(rec) || Promise.resolve()).then(async () => {
+    await storeReady;
+    if (!S.col) { SAVED.set(rec, false); return; }
+    const { id, ...data } = rec;
+    try { await S.col.doc(id).set(data); SAVED.set(rec, true); }
+    catch (e) { SAVED.set(rec, false); }
+  });
+  SAVEQ.set(rec, chain);
+  return chain;
+}
+
+function normaliseFeedback(raw, mode) {
+  const o = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const dims = mode === 'interview' ? IV_DIMS : NG_DIMS;
+  const list = Array.isArray(o.scores) ? o.scores : [];
+  const scores = dims.map((d, i) => {
+    const s = list.find((x) => x && String(x.key) === d.key) || list[i] || {};
+    let n = Math.round(Number(s.score));
+    if (!Number.isFinite(n)) n = 2;
+    return { key: d.key, score: Math.min(5, Math.max(1, n)), note: String(s.note == null ? '' : s.note).trim() };
+  });
+  const strs = (a, max) => (Array.isArray(a) ? a : []).map((x) => String(x == null ? '' : x).trim()).filter(Boolean).slice(0, max);
+  const rewrites = (Array.isArray(o.rewrites) ? o.rewrites : []).map((r) => ({
+    original: String(r && r.original != null ? r.original : '').trim(),
+    problem: String(r && r.problem != null ? r.problem : '').trim(),
+    better: String(r && r.better != null ? r.better : '').trim()
+  })).filter((r) => r.better).slice(0, 3);
+  return {
+    summary: String(o.summary == null ? '' : o.summary).trim(),
+    result: mode === 'negotiation' ? String(o.result == null ? '' : o.result).trim() : '',
+    scores, strengths: strs(o.strengths, 3), rewrites, missed: strs(o.missed, 3),
+    nextDrill: String(o.nextDrill == null ? '' : o.nextDrill).trim()
+  };
+}
+
+async function requestFeedback(rec) {
+  const cur = FB.get(rec); if (cur && cur.loading) return;
+  S.sample = S.sample || await samplePromise;
+  FB.set(rec, { loading: true });
+  if (S.shown === rec) renderReview();
+  try {
+    const raw = await S.sample.json(feedbackPrompt(rec), { modelTier: 'default', cache: false });
+    const fb = normaliseFeedback(raw, rec.mode);
+    rec.feedback = fb;
+    rec.total = fb.scores.reduce((a, b) => a + b.score, 0);
+    rec.max = 25;
+    FB.set(rec, {});
+    if (S.shown === rec) renderReview();
+    await persist(rec);
+    if (S.shown === rec) renderReview();
+  } catch (e) {
+    FB.set(rec, { error: e });
+    if (S.shown === rec) renderReview();
+  }
+}
+
+/* ---------- 回饋畫面 ---------- */
+function metaLine(rec) {
+  const un = rec.turns.filter((t) => t.role === 'user').length;
+  const bits = [`回答 ${un} 次`, `用時 ${mins(rec.durationSec)}`, `場外提示 ${rec.hints || 0} 次`];
+  if (rec.completed === false) bits.push('提前結束');
+  return bits.join(' · ');
+}
+function boxes(n) {
+  const w = h('span', { class: 'boxes', role: 'img', 'aria-label': `${n} 分，滿分 5 分` });
+  for (let i = 1; i <= 5; i++) w.append(h('i', { class: i <= n ? 'on' : '' }));
+  w.append(h('span', { class: 'num', text: `${n}/5` }));
+  return w;
+}
+function rwRow(k, v, cls) {
+  if (!v) return null;
+  return h('div', { class: 'rw-row' }, h('span', { class: 'rw-k', text: k }), h('span', { class: 'rw-v ' + (cls || ''), text: v }));
+}
+function renderReview() {
+  const root = $('#v-review'), rec = S.shown;
+  if (!rec) { root.replaceChildren(); return; }
+  const isIv = rec.mode === 'interview', dims = isIv ? IV_DIMS : NG_DIMS, fb = rec.feedback, st = FB.get(rec) || {};
+  const parts = [];
+  if (S.readOnly) parts.push(h('button', { class: 'linkbtn', type: 'button', onclick: () => { renderHistory(); showView('history'); } }, '← 返回紀錄'));
+  parts.push(h('p', { class: 'eyebrow', text: `${isIv ? '面試' : '談判'}回饋 · ${fmtDate(rec.createdAt)}` }));
+  parts.push(h('h1', { text: rec.title }));
+  parts.push(h('p', { class: 'meta', text: metaLine(rec) }));
+
+  if (fb) {
+    const total = rec.total != null ? rec.total : fb.scores.reduce((a, b) => a + b.score, 0);
+    parts.push(h('div', { class: 'scorehead' }, h('span', { class: 'n', text: String(total) }), h('span', { class: 'of', text: '/ 25' }), h('span', { class: 'cap', text: '五項各 5 分' })));
+    if (fb.summary) parts.push(h('p', { class: 'summary', text: fb.summary }));
+    if (fb.result) parts.push(h('p', { class: 'result' }, h('span', { class: 'tag', text: '結果' }), fb.result));
+    parts.push(h('section', { class: 'sheet' }, h('h2', { text: '評分表' }),
+      dims.map((d, i) => h('div', { class: 'crit' },
+        h('div', { class: 'crit-h' }, h('div', {}, h('div', { class: 'crit-name', text: d.label }), h('div', { class: 'crit-desc', text: d.desc })), boxes(fb.scores[i].score)),
+        fb.scores[i].note ? h('p', { class: 'crit-note', text: fb.scores[i].note }) : null))));
+    if (fb.strengths.length) parts.push(h('section', { class: 'blk' }, h('h2', { text: '做得好的地方' }), h('ul', { class: 'plain' }, fb.strengths.map((s) => h('li', { text: s })))));
+    if (fb.rewrites.length) parts.push(h('section', { class: 'blk' }, h('h2', { text: '可以更好的說法' }),
+      fb.rewrites.map((r) => h('div', { class: 'rw' }, rwRow('你說', r.original), rwRow('問題', r.problem), rwRow('可改成', r.better, 'better')))));
+    if (fb.missed.length) parts.push(h('section', { class: 'blk' }, h('h2', { text: isIv ? '錯過的加分時機' : '錯過的機會' }), h('ul', { class: 'plain' }, fb.missed.map((s) => h('li', { text: s })))));
+    if (fb.nextDrill) parts.push(h('section', { class: 'blk' }, h('h2', { text: '下次練習' }), h('p', { text: fb.nextDrill })));
+  } else if (st.loading) {
+    parts.push(h('div', { class: 'loading' }, dots(), h('p', { text: '教練正在讀你的對話並逐項評分，通常需要 20 到 60 秒。' })));
+  } else {
+    const code = st.error && st.error.code;
+    parts.push(h('div', { class: 'retry', style: null },
+      h('span', { text: st.error ? errCopy(code) : '這場練習還沒有回饋。' }),
+      (!st.error || !PERMANENT.has(code)) ? h('button', { class: 'btn sm', type: 'button', onclick: () => requestFeedback(rec) }, st.error ? '重試' : '產生回饋') : null));
+  }
+
+  parts.push(h('details', { class: 'tx' }, h('summary', { text: `對話紀錄（${rec.turns.length} 則）` }),
+    rec.turns.map((t) => h('div', { class: 't' }, h('b', { text: t.role === 'user' ? '你' : whoOf(rec.cfg) }), t.text))));
+
+  const acts = [h('button', { class: 'btn primary', type: 'button', onclick: () => startSession(rec.cfg) }, S.readOnly ? '用這組設定再練' : '再練一次（相同設定）')];
+  if (!S.readOnly) acts.push(h('button', { class: 'btn', type: 'button', onclick: () => { S.readOnly = false; setPractice('setup'); } }, '換新的情境'));
+  parts.push(h('div', { class: 'actions' }, acts));
+  if (fb && SAVED.get(rec) === false && !S.readOnly) parts.push(h('p', { class: 'savenote', text: '這場練習沒有存入紀錄（目前無法儲存）。需要的話，請先複製上方內容。' }));
+  else if (fb && SAVED.get(rec) === true && !S.readOnly) parts.push(h('p', { class: 'savenote', text: '已存入你的練習紀錄。' }));
+  root.replaceChildren(...parts);
+}
+
+/* ---------- 紀錄 ---------- */
+function spark(vals) {
+  const W = 120, H = 34, p = 5, n = vals.length, NS = 'http://www.w3.org/2000/svg';
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 4) { lo -= 2; hi += 2; }
+  const x = (i) => n === 1 ? W / 2 : p + i * (W - 2 * p) / (n - 1);
+  const y = (v) => H - p - ((v - lo) / (hi - lo)) * (H - 2 * p);
+  const svg = document.createElementNS(NS, 'svg');
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', String(W)); svg.setAttribute('height', String(H)); svg.setAttribute('aria-hidden', 'true');
+  if (n > 1) {
+    const pl = document.createElementNS(NS, 'polyline');
+    pl.setAttribute('class', 'sp-line'); pl.setAttribute('points', vals.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' '));
+    svg.append(pl);
+  }
+  vals.forEach((v, i) => {
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('cx', x(i).toFixed(1)); c.setAttribute('cy', y(v).toFixed(1));
+    const last = i === n - 1;
+    c.setAttribute('r', last ? '3.4' : '1.8'); c.setAttribute('class', last ? 'sp-end' : 'sp-dot');
+    svg.append(c);
+  });
+  return svg;
+}
+function trendTiles(list) {
+  const tiles = ['interview', 'negotiation'].map((m) => {
+    const pts = list.filter((r) => r.mode === m && Number.isFinite(r.total)).sort((a, b) => a.createdAt - b.createdAt).slice(-12).map((r) => r.total);
+    const label = h('span', { class: 'k', text: modeLabel(m) + '分數' });
+    if (!pts.length) return h('div', { class: 'tile' }, label, h('span', { class: 'd', text: '還沒有評分的練習' }));
+    const last = pts[pts.length - 1], prev = pts.length > 1 ? pts[pts.length - 2] : null;
+    const d = prev == null ? `共 ${pts.length} 次` : (last === prev ? '和前一次持平' : `較前一次 ${last > prev ? '+' : '−'}${Math.abs(last - prev)}`) + ` · 共 ${pts.length} 次`;
+    return h('div', { class: 'tile' }, label, h('div', { class: 'v' }, h('b', { text: String(last) }), h('span', { text: '/ 25' })), spark(pts), h('span', { class: 'd', text: d }));
+  });
+  return h('div', { class: 'trends' }, tiles);
+}
+function recRow(r) {
+  const del = h('button', { class: 'rec-del', type: 'button' }, '刪除');
+  let armed = false, t = null;
+  del.addEventListener('click', () => {
+    if (!armed) {
+      armed = true; del.textContent = '確定刪除'; del.classList.add('armed');
+      t = setTimeout(() => { armed = false; del.textContent = '刪除'; del.classList.remove('armed'); }, 3500);
+      return;
+    }
+    clearTimeout(t);
+    del.disabled = true;
+    S.col.doc(r.id).delete().catch(() => { del.disabled = false; del.textContent = '刪除失敗'; });
+  });
+  const score = Number.isFinite(r.total) ? h('span', { class: 'rec-score', text: `${r.total}/25` }) : h('span', { class: 'rec-score none', text: '未評分' });
+  const main = h('button', { class: 'rec-main', type: 'button', onclick: () => openRecord(r) },
+    h('span', { class: 'rec-date', text: fmtDate(r.createdAt) }),
+    h('span', { class: 'rec-body' }, h('span', { class: 'rec-title', text: r.title }), h('span', { class: 'rec-sub', text: `${modeLabel(r.mode)} · ${mins(r.durationSec)}` })),
+    score);
+  return h('li', { class: 'rec' }, main, del);
+}
+function renderHistory() {
+  const root = $('#v-history');
+  const parts = [h('h1', { text: '練習紀錄' })];
+  if (S.storeState === 'pending') {
+    parts.push(h('p', { class: 'lead', text: '正在連接你的紀錄…' }));
+  } else if (!S.col) {
+    parts.push(h('div', { class: 'banner', text: '目前無法儲存紀錄（尚未登入，或這個環境不支援）。練習仍然可以用，只是不會留下紀錄。' }));
+  } else if (S.storeErr) {
+    parts.push(h('div', { class: 'banner', text: '讀取紀錄時出了問題，請重新整理頁面。' }));
+  } else if (!S.sessions) {
+    parts.push(h('p', { class: 'lead', text: '讀取中…' }));
+  } else if (!S.sessions.length) {
+    parts.push(h('p', { class: 'lead', text: '練習紀錄存在你自己的私人資料區，其他人看不到。' }));
+    parts.push(h('div', { class: 'empty', text: '還沒有紀錄。完成一場練習並產生回饋後，分數與對話會出現在這裡，也會畫出你的進步曲線。' }));
+  } else {
+    parts.push(h('p', { class: 'lead', text: '練習紀錄存在你自己的私人資料區，其他人看不到。' }));
+    parts.push(trendTiles(S.sessions));
+    parts.push(h('ul', { class: 'recs' }, S.sessions.map(recRow)));
+  }
+  root.replaceChildren(...parts);
+}
+function openRecord(r) {
+  S.shown = r; S.readOnly = true;
+  renderReview(); showView('review');
+}
+
+/* ---------- 儲存連線 ---------- */
+const storeReady = (async () => {
+  try {
+    const [db, user] = await Promise.all([use('db'), use('user')]);
+    if (!db || !user) { S.storeState = 'off'; return; }
+    const uid = await user.id();
+    if (!uid) { S.storeState = 'off'; return; }
+    S.col = db.doc('data/users/' + uid + '/app').collection('sessions');
+    S.storeState = 'ready';
+    S.col.orderBy('createdAt', 'desc').limit(80).onSnapshot(
+      (snap) => { S.sessions = snap.docs.map((d) => Object.assign({ id: d.id }, d.data())); S.storeErr = null; renderHistory(); },
+      (err) => { S.storeErr = err && err.code ? err.code : 'error'; renderHistory(); }
+    );
+  } catch (e) {
+    S.storeState = 'off';
+  } finally {
+    renderHistory();
+  }
+})();
+
+renderHistory();
+})();
+</script>
+
+<script>if('serviceWorker' in navigator){addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}</script>
+</body></html>
